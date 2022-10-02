@@ -15,7 +15,7 @@ from utils.plot_show import Plot
 
 
 def normalization(dataset):
-    normalizer = MinMaxScaler(feature_range=(0, 1))
+    normalizer = MinMaxScaler(feature_range=(-1, 1))
     # sklearn中所有数据都需要2维
     if len(dataset.shape) == 1:
         dataset = dataset.reshape(-1, 1)
@@ -61,24 +61,31 @@ def generate_data_iter(X, Y, batch_size, shuffle=False, drop_last=True):
     return data_iter
 
 
-def get_data_iter_from_dataset(data_dir, file_name, columns_num, window_size, batch_size, time_column_num=0,
-                                normalize=True):
+def get_raw_data(data_dir, file_name, columns_num, time_column_num=0,
+                 normalize=True):
+    normalizer = None
     data_frame = read_data(data_dir, file_name)
+    columns_name = data_frame.columns[columns_num]
     time = extract_raw_data_from_frame(data_frame, time_column_num, is_time=True)
     raw_data = extract_raw_data_from_frame(data_frame, columns_num)
     if normalize:
         raw_data, normalizer = normalization(raw_data)
-    # myPlot = Plot(raw_data, time=time)
-    # myPlot.draw()
+    return raw_data, time, columns_name, normalizer
+
+
+def get_data_iter_from_dataset(data_dir, file_name, columns_num, window_size, batch_size, time_column_num=0,
+                               normalize=True, shuffle=False):
+    raw_data, time, _, _ = get_raw_data(data_dir, file_name, columns_num, time_column_num, normalize)
     sequence_list = split_data_by_window(raw_data, window_size)
     training_fold_bound = -len(sequence_list) // 5
     train_list = sequence_list[:training_fold_bound]
     validation_list = sequence_list[training_fold_bound:]
     train_X, train_Y = np.array(train_list[:-1]), np.array(train_list[1:])
     validation_X, validation_Y = np.array(validation_list[:-1]), np.array(validation_list[1:])
-    train_iter = generate_data_iter(train_X, train_Y, batch_size=batch_size)
-    validation_iter = generate_data_iter(validation_X, validation_Y, batch_size=batch_size)
-    return train_iter, validation_iter
+    train_iter = generate_data_iter(train_X, train_Y, batch_size=batch_size, shuffle=shuffle)
+    validation_iter = generate_data_iter(validation_X, validation_Y, batch_size=batch_size, shuffle=True)
+    predict_base = sequence_list[:-1]
+    return train_iter, validation_iter, predict_base
 
 
 if __name__ == "__main__":
