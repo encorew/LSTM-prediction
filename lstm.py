@@ -14,7 +14,7 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(drop_out)
 
     def __call__(self, X, state):
-        X = self.dropout(X)
+        # X = self.dropout(X)
         # print(f"X.shape {X.shape} h.shape {state[1].shape}")
         hiddens, state = self.lstm(X, state)
         outputs = self.linear(hiddens)

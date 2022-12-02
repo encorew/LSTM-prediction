@@ -11,8 +11,6 @@ import torch
 import torch.utils.data as Data
 import pickle
 
-from utils.plot_show import Plot
-
 
 def normalization(dataset):
     normalizer = MinMaxScaler(feature_range=(-1, 1))
@@ -54,11 +52,11 @@ def split_data_by_window(data, window_size):
     return sequence_list
 
 
-def generate_data_iter(X, Y, batch_size, shuffle=False, drop_last=True):
-    X, Y = torch.tensor(X, dtype=torch.float32), torch.tensor(Y, dtype=torch.float32)
-    data_set = Data.TensorDataset(X, Y)
-    data_iter = Data.DataLoader(data_set, batch_size, shuffle, drop_last=drop_last)
-    return data_iter
+# def generate_data_iter(X, Y, batch_size, shuffle=False, drop_last=True):
+#     X, Y = torch.tensor(X, dtype=torch.float32), torch.tensor(Y, dtype=torch.float32)
+#     data_set = Data.TensorDataset(X, Y)
+#     data_iter = Data.DataLoader(data_set, batch_size, shuffle, drop_last=drop_last)
+#     return data_iter
 
 
 def get_raw_data(data_dir, file_name, columns_num, time_column_num=0,
@@ -73,21 +71,25 @@ def get_raw_data(data_dir, file_name, columns_num, time_column_num=0,
     return raw_data, time, columns_name, normalizer
 
 
-def get_data_iter_from_dataset(data_dir, file_name, columns_num, window_size, batch_size, time_column_num=0,
-                               normalize=True, shuffle=False):
-    raw_data, time, _, _ = get_raw_data(data_dir, file_name, columns_num, time_column_num, normalize)
-    sequence_list = split_data_by_window(raw_data, window_size)
-    training_fold_bound = -len(sequence_list) // 5
-    train_list = sequence_list[:training_fold_bound]
-    validation_list = sequence_list[training_fold_bound:]
-    train_X, train_Y = np.array(train_list[:-1]), np.array(train_list[1:])
-    validation_X, validation_Y = np.array(validation_list[:-1]), np.array(validation_list[1:])
-    train_iter = generate_data_iter(train_X, train_Y, batch_size=batch_size, shuffle=shuffle)
-    validation_iter = generate_data_iter(validation_X, validation_Y, batch_size=batch_size, shuffle=True)
-    predict_base = sequence_list[:-1]
-    return train_iter, validation_iter, predict_base
+# def get_data_iter_from_dataset(data_dir, file_name, columns_num, window_size, batch_size, time_column_num=0,
+#                                normalize=True, shuffle=False):
+#     raw_data, time, _, _ = get_raw_data(data_dir, file_name, columns_num, time_column_num, normalize)
+#     sequence_list = split_data_by_window(raw_data, window_size)
+#     training_fold_bound = -len(sequence_list) // 5
+#     train_list = sequence_list[:training_fold_bound]
+#     validation_list = sequence_list[training_fold_bound:]
+#     train_X, train_Y = np.array(train_list[:-1]), np.array(train_list[1:])
+#     validation_X, validation_Y = np.array(validation_list[:-1]), np.array(validation_list[1:])
+#     train_iter = generate_data_iter(train_X, train_Y, batch_size=batch_size, shuffle=shuffle)
+#     validation_iter = generate_data_iter(validation_X, validation_Y, batch_size=batch_size, shuffle=True)
+#     predict_base = sequence_list[:-1]
+#     return train_iter, validation_iter, predict_base
 
 
 if __name__ == "__main__":
-    dir_path = "../data"
-    file_name = "grouped_dm_pc_online_amt_stats.csv"
+    dir_path = "../data/predicted"
+    file_name = "ONLINE_ELE_USERS.csv"
+    data, time, _, _ = get_raw_data(dir_path, file_name, [1, 2], normalize=False)
+    plt.plot(time, data[:, 0])
+    plt.plot(time, data[:, 1])
+    plt.show()
